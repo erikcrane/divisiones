@@ -22,3 +22,8 @@ src/
 pyproject.toml
 .python-version
 uv.lock
+
+# Cabeceras que ya han salido en la ronda actual (se crea solo al generar
+# fichas). En Docker vive en /app/pdfs; fuera de Docker, en la carpeta desde
+# la que se ejecuta.
+cabeceras_salidas.json

@@ -10,6 +10,11 @@ services:
       TZ: Europe/Madrid       # zona horaria para los nombres de los PDF
     secrets:
       - divisiones_env        # el programa lo lee en /run/secrets/divisiones_env
+    volumes:
+      # Los PDF y cabeceras_salidas.json (la rotación de cabeceras) se
+      # guardan en /app/pdfs. Con este volumen se conservan al recrear o
+      # actualizar el contenedor.
+      - divisiones_pdfs:/app/pdfs
     # Sin "ports": Nginx Proxy Manager está en la misma red de Docker y
     # llega directamente al contenedor. En NPM: Forward Hostname "divisiones"
     # (el container_name) y Forward Port 80 (el puerto de servidor.py).
@@ -25,6 +30,16 @@ services:
 secrets:
   divisiones_env:
     file: ./.env
+
+# Volumen con nombre para /app/pdfs: lo crea y gestiona Docker (en Portainer
+# aparece en "Volumes"). Al crearse copia los permisos de /app/pdfs de la
+# imagen, así que el usuario 1000 puede escribir sin hacer nada más.
+# "docker compose down" no lo borra; solo "docker compose down -v" o
+# borrarlo a mano. "name" fija su nombre real; sin él, Docker le pondría
+# delante el nombre del proyecto o del stack (divisiones_divisiones_pdfs).
+volumes:
+  divisiones_pdfs:
+    name: divisiones_pdfs
 
 # La red de Nginx Proxy Manager (ya existe, la crea NPM): pon su nombre real.
 # networks:

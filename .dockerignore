@@ -15,3 +15,6 @@ uv.lock
 README.md
 .vscode
 docs/
+AYUDA.md
+cabeceras_salidas.json
+cabeceras.v1.py

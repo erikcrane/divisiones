@@ -4,12 +4,11 @@ Recibe las parejas (dividendo, divisor), en centésimas, ya generadas por
 `divisiones.py` y las escribe en un PDF.
 
 La hoja empieza con una cabecera (título y texto de introducción) con
-temática de Fortnite, elegida al azar entre las de `cabeceras.py`, seguida de una cuadrícula de 2 columnas x 3 filas con
+temática de Fortnite (elegida en `divisiones.py`), seguida de una cuadrícula de 2 columnas x 3 filas con
 una división en cada celda, dibujada con su caja y con sitio debajo para
 resolverla a mano (con el lápiz de una tablet).
 """
 
-import random
 import re
 import sys
 from datetime import datetime
@@ -24,8 +23,6 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Table, TableStyle
-
-from cabeceras import CABECERAS
 
 CARPETA_SCRIPT = Path(__file__).resolve().parent
 
@@ -93,10 +90,10 @@ def formatear_numero(centesimas):
     return f"{enteros},{decimales:02d}"
 
 
-def mostrar_salida(divisiones, ruta_pdf):
+def mostrar_salida(divisiones, cabecera, ruta_pdf):
     """Convierte cada pareja (dividendo, divisor) en texto y genera el PDF.
 
-    La cabecera (título y texto) se elige al azar entre las de CABECERAS.
+    `cabecera` es la pareja (título, texto) elegida en `divisiones.py`.
 
     Es el único punto de salida del programa: si se cambia el destino (otro
     formato, otra maqueta...), solo hay que tocar este módulo.
@@ -105,7 +102,7 @@ def mostrar_salida(divisiones, ruta_pdf):
         (formatear_numero(dividendo), formatear_numero(divisor))
         for dividendo, divisor in divisiones
     ]
-    titulo, texto = random.choice(CABECERAS)
+    titulo, texto = cabecera
     generar_pdf(titulo, texto, ejercicios, ruta_pdf)
     print(f"PDF generado: {ruta_pdf} (cabecera: {titulo or texto[:40]})")
 

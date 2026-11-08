@@ -13,9 +13,11 @@ botón.
   (de 10,01 a 99,99). La última cifra decimal nunca es 0.
 - Las divisiones van en una cuadrícula de 2 columnas x 3 filas, cada una con
   su caja y el resto de la celda libre para hacer la cuenta.
-- La cabecera (título y texto) se elige al azar entre cinco historias de
+- La cabecera (título y texto) se elige al azar entre 100 historias de
   Fortnite: hay que ayudar a ganar el Battle Royale calculando los
-  materiales de las construcciones.
+  materiales de las construcciones. No se repite ninguna hasta que han
+  salido todas, y nunca sale la misma en dos fichas seguidas (las que ya
+  han salido se guardan en `cabeceras_salidas.json`).
 
 ## Instalación
 
@@ -90,8 +92,14 @@ El `.env` se pasa al contenedor como **secreto de Docker**
 aparece en `docker inspect`. El fichero tiene que poder leerlo el usuario
 1000, que es con el que corre el contenedor. En Portainer, en `file:` del
 secreto va la ruta absoluta del fichero en el servidor, que puede tener
-cualquier nombre. Los PDF se guardan dentro del contenedor, en
-`/app/pdfs`, y se pierden al recrearlo.
+cualquier nombre.
+
+Los PDF y `cabeceras_salidas.json` se guardan en `/app/pdfs`, que es el
+volumen de Docker **`divisiones_pdfs`**. Así se conservan al recrear o
+actualizar el contenedor: la rotación de cabeceras sigue donde iba y la
+numeración de los PDF no vuelve a empezar. `docker compose down` no borra
+el volumen; para borrarlo, `docker compose down -v` o desde Portainer. Los
+PDF se van acumulando (unos 28 KB cada uno) y nada los borra.
 
 ## Personalizar
 
@@ -99,10 +107,14 @@ cualquier nombre. Los PDF se guardan dentro del contenedor, en
   de las divisiones y de su caja, cuadrícula): constantes al principio de
   `generacion_pdf.py`.
 - **Cabeceras** (título y texto de introducción): `cabeceras.py`. Para dar
-  más variedad basta con añadir parejas (título, texto).
+  más variedad basta con añadir parejas (título, texto); cada título tiene
+  que ser distinto.
 - **Rango de los números y número de divisiones**: constantes al principio
   de `divisiones.py`.
 - **Texto del correo**: `ASUNTO_EMAIL` y `TEXTO_EMAIL` en `divisiones.py`.
+
+La explicación de cada fichero y de cada función está en
+**[AYUDA.md](AYUDA.md)**.
 
 ## Licencias de terceros
 

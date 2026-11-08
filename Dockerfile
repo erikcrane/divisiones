@@ -11,9 +11,11 @@ WORKDIR /app
 COPY divisiones.py generacion_pdf.py cabeceras.py enviar_email.py servidor.py index.html ./
 COPY fonts/ fonts/
 
-# Carpeta de los PDF, dentro del contenedor (se pierden al recrearlo). Con
-# permisos para cualquier usuario, porque el contenedor no corre como root
-# (ver "user:" en docker-compose.yml).
+# Carpeta de los PDF y de cabeceras_salidas.json. En docker-compose.yml se
+# monta en ella el volumen "divisiones_pdfs" para que no se pierdan al
+# recrear el contenedor. Con permisos para cualquier usuario, porque el
+# contenedor no corre como root (ver "user:" en docker-compose.yml); el
+# volumen copia estos permisos al crearse.
 RUN mkdir -p /app/pdfs && chmod 777 /app/pdfs
 
 # PYTHONUNBUFFERED para que los mensajes (PDF generado, cabecera elegida,
