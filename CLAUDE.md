@@ -1,0 +1,31 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Overview
+
+Small Python CLI that generates a PDF worksheet of 6 decimal divisions and can email it. Sister project of `/home/fran/proyectos/multiplicaciones` (same layout and conventions; copy patterns from there). Code, comments, identifiers and output are all in Spanish — keep new code consistent with that.
+
+## Commands
+
+The virtualenv is uv's `.venv/` (Python 3.13; dependency: `reportlab`, installed with `uv pip install --python .venv/bin/python reportlab`). No test suite. `src/`, `pyproject.toml`, `.python-version` (and `uv.lock`) come from the user's own `uv init` dev setup: they are intentional, gitignored and not part of the program — don't delete them or suggest flattening the project like multiplicaciones.
+
+```bash
+.venv/bin/python divisiones.py               # -> divisiones_DD-MM_HHhMM_YYYY_NNN.pdf
+.venv/bin/python divisiones.py -o x.pdf      # custom output path
+.venv/bin/python divisiones.py -e a@x.com    # also email the PDF via SMTP (-e repeatable)
+.venv/bin/python divisiones.py -e            # -e without address -> DESTINATARIOS in .env
+```
+
+## Architecture
+
+- `divisiones.py` — only `main()` and the "raw" generation (no PDF code). `generar_divisiones` returns `NUM_EJERCICIOS` (6) unique `(dividendo, divisor)` pairs as integers in hundredths (34567 = 345,67) to avoid float errors. Dividend: 3 integer digits + 2 decimals; divisor: 2 integer digits + 2 decimals; the hundredths digit is never 0 (`numero_con_dos_decimales`). Email subject/body are `ASUNTO_EMAIL`/`TEXTO_EMAIL` here.
+- `cabeceras.py` — pure data, no logic: `CABECERAS`, a list of 5 Fortnite-themed `(titulo, texto)` headers (need the reader's help to win the Battle Royale; the divisions compute the materials for the builds that protect you). Add variety by adding pairs; keep texts around 7 lines, since the division grid gets whatever height is left.
+- `generacion_pdf.py` — `mostrar_salida(divisiones, ruta_pdf)` is the single output seam; it formats numbers with a decimal comma (`formatear_numero`) and calls `generar_pdf` (reportlab platypus). Fortnite theme: `mostrar_salida` picks a random `(titulo, texto)` header from `CABECERAS` and passes it to `generar_pdf(titulo, texto, ejercicios, ruta_pdf)`; the title is centered at 1.6× size, the text a justified intro; either can be `""` to omit it. Spacing knobs: `MARGEN_SUPERIOR` (18 mm minus one text line, so the header sits higher), `MARGEN_INFERIOR` (18 mm), `SEPARACION_TITULO` (title→intro) and `SEPARACION_CABECERA` (intro→grid). Three font knobs: `FUENTE_TITULO` = `fonts/Anton-Regular.ttf` (closest free match to Fortnite's commercial Burbank Big Condensed; SIL OFL, `fonts/OFL-Anton.txt`, from google/fonts), `FUENTE_TEXTO` (header text, currently also Anton by the user's choice) and `FUENTE_DIVISIONES` = `fonts/Fredoka-SemiBold.ttf` (copied from multiplicaciones, SIL OFL, `fonts/OFL-Fredoka.txt`). The title is always printed in uppercase (`titulo.upper()`), Fortnite style. Each is registered by `registrar_fuente` (bold mapped to the same file so `<b>` works); size `TAMANO_TEXTO` 13.5. Exercises: `cuadricula_divisiones` builds a `COLUMNAS`×`FILAS` (2×3) reportlab `Table` that fills all the page height left under the header (measured in `generar_pdf` by wrapping the header paragraphs; frame padding 6 pt per side), so it is meant for writing with a tablet pen. Each cell holds a `DivisionCaja` flowable at its top: no exercise numbers; dividend on the left, and an "L"-shaped box: vertical line at `POSICION_CAJA` of the cell width, left of the divisor, ending at the horizontal line under the divisor, which runs to the right edge. One knob sizes the whole division: `TAMANO_DIVISION` (font size; line width scales with it). Other knobs: `MARGEN_CELDA`, `COLOR_CUADRICULA` (None hides the grid), `COLOR_CAJA`. `nombre_pdf_automatico()` names the output like in multiplicaciones (prefix `divisiones`).
+- `enviar_email.py` — copied from multiplicaciones: SMTP (Brevo) config from `/run/secrets/divisiones_env` (Docker secret) or the project `.env` (gitignored; template `.env.ejemplo`). Never put credentials in code.
+
+- `servidor.py` + `index.html` — copied from multiplicaciones: stdlib `http.server` web UI with one "Generar" button that POSTs `/generar`, which runs `divisiones.py -e` with cwd `CARPETA_PDFS` (env var, default the project dir). After each run (success or failure) new runs are refused for `ESPERA_SEGUNDOS` (20 s, 429); every JSON response carries `espera`, shown as a countdown on the button. The script's stdout/stderr (PDF name, chosen header, email result or error) is printed only to the server console (= Docker container log), never sent to the page. `.venv/bin/python servidor.py [-p PORT]` (default 80; outside Docker a normal user cannot bind 80, so use `-p 8000`).
+
+- Docker: `Dockerfile` (python:3.13-slim, reportlab 5.1.0) + `docker-compose.yml` (`docker compose up -d --build`), mirroring multiplicaciones. No `ports`: Nginx Proxy Manager shares a Docker network with the container and forwards to `divisiones:80` (hostname = `container_name`; `servidor.py` listens on 80 by default, matching `EXPOSE 80`; binding <1024 as uid 1000 works because Docker sets `ip_unprivileged_port_start=0` in containers). The `networks` block for NPM's external network is left commented in the compose (network name unknown; it lives on the deployment server, not this machine). PDFs kept inside the container in `/app/pdfs` (no volume, lost on recreate; world-writable), `TZ=Europe/Madrid`, runs as uid 1000, `PYTHONUNBUFFERED=1` so the script output reaches `docker logs` immediately. Meant to sit behind Nginx Proxy Manager on the LAN. SMTP settings arrive as the compose secret `divisiones_env` (`file: ./.env`; in Portainer an absolute host path), never via env vars or the image; the file must be readable by uid 1000. `.dockerignore` keeps `.env`, `.venv/`, `src/`, PDFs and docs out of the image.
+
+Docs: `README.md` (landing page in Spanish: what it is, install, usage, web, Docker/NPM, customizing, third-party licenses and a Fortnite/Epic Games non-affiliation note; shows `docs/ejemplo.png`, a page render regenerated by hand). Keep it in sync when changing commands, constants or setup.

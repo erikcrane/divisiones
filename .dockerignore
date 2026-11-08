@@ -1,0 +1,17 @@
+.venv/
+env/
+src/
+__pycache__/
+pdfs/
+*.pdf
+.git/
+CLAUDE.md
+.env
+.env.ejemplo
+.gitignore
+.python-version
+pyproject.toml
+uv.lock
+README.md
+.vscode
+docs/

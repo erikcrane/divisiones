@@ -1,0 +1,33 @@
+services:
+  divisiones:
+    build: .
+    image: divisiones:local
+    container_name: divisiones
+    restart: unless-stopped
+    user: "1000:1000"         # usuario sin privilegios (no root) con el que corre el contenedor
+    init: true                # para que "docker stop" pare el servidor al momento
+    environment:
+      TZ: Europe/Madrid       # zona horaria para los nombres de los PDF
+    secrets:
+      - divisiones_env        # el programa lo lee en /run/secrets/divisiones_env
+    # Sin "ports": Nginx Proxy Manager está en la misma red de Docker y
+    # llega directamente al contenedor. En NPM: Forward Hostname "divisiones"
+    # (el container_name) y Forward Port 80 (el puerto de servidor.py).
+    # Para meter el contenedor en la red de NPM, descomenta estas líneas y
+    # las del final, y pon el nombre de esa red:
+    # networks:
+    #   - npm
+
+# Datos privados del correo (contraseña SMTP), con el formato de .env.ejemplo.
+# No van en la imagen: Docker monta el fichero en el contenedor al arrancar.
+# Debe poder leerlo el usuario 1000 (el del contenedor). En Portainer, pon
+# aquí la ruta absoluta del fichero en el servidor.
+secrets:
+  divisiones_env:
+    file: ./.env
+
+# La red de Nginx Proxy Manager (ya existe, la crea NPM): pon su nombre real.
+# networks:
+#   npm:
+#     external: true
+#     name: NOMBRE_DE_LA_RED_DE_NPM

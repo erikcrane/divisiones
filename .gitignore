@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Entorno virtual: cada ordenador crea el suyo
+#   uv venv && uv pip install --python .venv/bin/python reportlab
+.venv
+
+# Configuración privada del correo (contraseña SMTP). Plantilla: .env.ejemplo
+.env
+
+# PDF generados
+*.pdf
+
+# Ficheros del entorno de desarrollo local (creados con "uv init"): no forman
+# parte del programa, cada ordenador tiene los suyos.
+src/
+pyproject.toml
+.python-version
+uv.lock
