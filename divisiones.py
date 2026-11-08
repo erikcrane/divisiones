@@ -22,7 +22,7 @@ adelante el destino sin tocar el resto del programa.
 import argparse
 import random
 
-from enviar_email import enviar_pdf
+from enviar_email import enviar_pdf, preparar_envio
 from generacion_pdf import mostrar_salida, nombre_pdf_automatico
 
 # Correo que se envía con la opción --email (el PDF va adjunto).
@@ -109,12 +109,16 @@ def main(argv=None):
         if "@" not in direccion:
             parser.error(f"'{direccion}' no parece una dirección de correo.")
 
+    # Con -e, los datos del correo se comprueban antes de generar nada: si
+    # falta el .env o algún dato, el programa se corta sin crear el PDF.
+    envio = preparar_envio(direcciones) if args.email is not None else None
+
     divisiones = generar_divisiones(NUM_EJERCICIOS)
     ruta_pdf = args.salida or nombre_pdf_automatico()
     mostrar_salida(divisiones, ruta_pdf)
 
-    if args.email is not None:
-        enviar_pdf(direcciones, ASUNTO_EMAIL, TEXTO_EMAIL, ruta_pdf)
+    if envio is not None:
+        enviar_pdf(*envio, ASUNTO_EMAIL, TEXTO_EMAIL, ruta_pdf)
 
 
 if __name__ == "__main__":
